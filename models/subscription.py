@@ -1,16 +1,20 @@
-def subscription_model(customer_id, product_id, expiration_date, customization=None):
-    return {
-        "customer_id": customer_id, 
-        "product_id": product_id,   
-        "expiration_date": expiration_date, 
-        "customization": customization if customization is not None else {}
-    }
+from datetime import datetime
 
-# Ejemplo de estructura para un "widget de accesibilidad"
-def accessibility_widget_customization_example():
+def subscription_model(
+    customer_id, 
+    product_id, 
+    expiration_date, 
+    customization, 
+    price_at_subscription, 
+    periodicity_at_subscription, 
+    start_date=None
+):
     return {
-        "topBarColor": "#FFFFFF",
-        "topBarBackgroundColor": "#1A1A1A",
-        "positionIndex": 1, 
-        "defaultLang": "es"
+        "customer_id": customer_id,
+        "product_id": product_id,
+        "expiration_date": expiration_date,
+        "customization": customization,
+        "price_at_subscription": price_at_subscription,        
+        "periodicity_at_subscription": periodicity_at_subscription, 
+        "start_date": start_date if start_date is not None else datetime.utcnow() 
     }

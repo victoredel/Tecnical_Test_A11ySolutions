@@ -12,11 +12,16 @@ class SubscriptionService:
         self.products_collection = self.db.products
         self.subscriptions_collection = self.db.subscriptions
 
-    def add_product(self, name, description, customizable):
+    def add_product(self, name, description, customizable, price, periodicity):
         if self.products_collection.find_one({"name": name}):
             return None, "Product with this name already exists"
+        
+        if not isinstance(price, (int, float)) or price <= 0:
+            return None, "Price must be a positive number"
+        if periodicity not in ["monthly", "annually"]: 
+            return None, "Periodicity must be 'monthly' or 'annually'"
 
-        product_data = product_model(name, description, customizable)
+        product_data = product_model(name, description, customizable, price, periodicity)
         result = self.products_collection.insert_one(product_data)
         return str(result.inserted_id), None
 

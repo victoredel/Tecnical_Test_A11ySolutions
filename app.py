@@ -3,11 +3,14 @@ from services.auth_service import AuthService
 from services.subscription_service import SubscriptionService 
 from database import init_db
 from utils.auth import jwt_required 
+from services.metrics_service import MetricsService
 
 app = Flask(__name__)
 init_db()
 auth_service = AuthService()
 subscription_service = SubscriptionService()
+metrics_service = MetricsService() 
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -54,22 +57,24 @@ def register_customer():
 
 @app.route('/add_product', methods=['POST'])
 @jwt_required
-def add_product(current_user_id):
+def add_product():
     """
     Añade un nuevo producto.
-    Body: {"name": "Nombre Producto", "description": "Descripción", "customizable": true/false}
+    Body: {"name": "Nombre Producto", "description": "Descripción", "customizable": true/false, "price": 100.0, "periodicity": "monthly"}
     """
     data = request.json
     name = data.get('name')
     description = data.get('description')
-    customizable = data.get('customizable', False) 
+    customizable = data.get('customizable', False)
+    price = data.get('price')           # Nuevo
+    periodicity = data.get('periodicity') # Nuevo
 
-    if not name or not description:
-        return jsonify({"error": "Name and description are required"}), 400
+    if not all([name, description, price, periodicity]): 
+        return jsonify({"error": "Name, description, price, and periodicity are required"}), 400
     
-    product_id, error = subscription_service.add_product(name, description, customizable)
+    product_id, error = subscription_service.add_product(name, description, customizable, price, periodicity)
     if error:
-        return jsonify({"error": error}), 409 
+        return jsonify({"error": error}), 409
 
     return jsonify({
         "message": "Product added successfully",
@@ -222,5 +227,111 @@ def extend_subscription(subscription_id_str, current_user_id):
         return jsonify({"message": "Subscription extended successfully"}), 200
     return jsonify({"error": "Failed to extend subscription"}), 500
 
+@app.route('/metrics/mrr', methods=['GET'])
+@jwt_required
+def get_mrr():
+    """
+    Retorna el Ingreso Recurrente Mensual (MRR) actual.
+    """
+    mrr = metrics_service.calculate_mrr()
+    return jsonify({"mrr": mrr}), 200
+
+@app.route('/metrics/arr', methods=['GET'])
+@jwt_required
+def get_arr():
+    """
+    Retorna el Ingreso Recurrente Anual (ARR) actual.
+    """
+    arr = metrics_service.calculate_arr()
+    return jsonify({"arr": arr}), 200
+
+@app.route('/metrics/arpu', methods=['GET'])
+@jwt_required
+def get_arpu():
+    """
+    Retorna el Ingreso Medio por Usuario (ARPU) actual.
+    """
+    arpu = metrics_service.calculate_arpu()
+    return jsonify({"arpu": arpu}), 200
+
+@app.route('/metrics/clv', methods=['GET'])
+@jwt_required
+def get_clv():
+    """
+    Retorna el Valor de Vida del Cliente (CLV).
+    """
+    clv = metrics_service.calculate_clv()
+    return jsonify({"clv": clv}), 200
+
+@app.route('/metrics/retention', methods=['GET'])
+@jwt_required
+def get_retention_rate():
+    """
+    Retorna la Tasa de Retención de Clientes (CRR) para un período dado.
+    Parámetros de consulta: start_date, end_date (formato YYYY-MM-DD)
+    """
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+
+    if not start_date_str or not end_date_str:
+        return jsonify({"error": "start_date and end_date are required query parameters"}), 400
+
+    try:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1, seconds=-1) # Fin del día
+    except ValueError:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+
+    if start_date >= end_date:
+        return jsonify({"error": "start_date must be before end_date"}), 400
+
+    retention_rate = metrics_service.calculate_customer_retention_rate(start_date, end_date)
+    return jsonify({"customer_retention_rate": retention_rate}), 200
+
+@app.route('/metrics/churn', methods=['GET'])
+@jwt_required
+def get_churn_rate():
+    """
+    Retorna la Tasa de Abandono (Churn Rate - CR) para un período dado.
+    Parámetros de consulta: start_date, end_date (formato YYYY-MM-DD)
+    """
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+
+    if not start_date_str or not end_date_str:
+        return jsonify({"error": "start_date and end_date are required query parameters"}), 400
+
+    try:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1, seconds=-1)
+    except ValueError:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+
+    if start_date >= end_date:
+        return jsonify({"error": "start_date must be before end_date"}), 400
+
+    churn_rate = metrics_service.calculate_churn_rate(start_date, end_date)
+    return jsonify({"churn_rate": churn_rate}), 200
+
+@app.route('/metrics/aov', methods=['GET'])
+@jwt_required
+def get_aov():
+    """
+    Retorna el Valor Promedio del Pedido (AOV).
+    """
+    aov = metrics_service.calculate_aov()
+    return jsonify({"average_order_value": aov}), 200
+
+@app.route('/metrics/rpr', methods=['GET'])
+@jwt_required
+def get_rpr():
+    """
+    Retorna la Tasa de Compra Repetida (RPR).
+    """
+    rpr = metrics_service.calculate_rpr()
+    return jsonify({"repeat_purchase_rate": rpr}), 200
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+    
+    
