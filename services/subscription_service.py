@@ -12,14 +12,6 @@ class SubscriptionService:
         self.products_collection = self.db.products
         self.subscriptions_collection = self.db.subscriptions
 
-    def register_customer(self, name, email):
-        if self.customers_collection.find_one({"email": email}):
-            return None, "Customer with this email already exists"
-        
-        customer_data = customer_model(name, email)
-        result = self.customers_collection.insert_one(customer_data)
-        return str(result.inserted_id), None
-
     def add_product(self, name, description, customizable):
         if self.products_collection.find_one({"name": name}):
             return None, "Product with this name already exists"
