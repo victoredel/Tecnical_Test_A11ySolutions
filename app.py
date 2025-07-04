@@ -54,7 +54,7 @@ def register_customer():
 
 @app.route('/add_product', methods=['POST'])
 @jwt_required
-def add_product():
+def add_product(current_user_id):
     """
     Añade un nuevo producto.
     Body: {"name": "Nombre Producto", "description": "Descripción", "customizable": true/false}
@@ -62,14 +62,14 @@ def add_product():
     data = request.json
     name = data.get('name')
     description = data.get('description')
-    customizable = data.get('customizable', False) # Por defecto no personalizable
+    customizable = data.get('customizable', False) 
 
     if not name or not description:
         return jsonify({"error": "Name and description are required"}), 400
     
     product_id, error = subscription_service.add_product(name, description, customizable)
     if error:
-        return jsonify({"error": error}), 409 # Conflict if name exists
+        return jsonify({"error": error}), 409 
 
     return jsonify({
         "message": "Product added successfully",
@@ -100,14 +100,13 @@ def subscribe(current_user_id):
     )
 
     if error:
-        # Mapear errores del servicio a códigos de estado HTTP
         if "Invalid" in error or "Use ISO format" in error:
             return jsonify({"error": error}), 400
         elif "not found" in error:
             return jsonify({"error": error}), 404
         elif "already has an active subscription" in error or "Product is not customizable" in error:
             return jsonify({"error": error}), 409
-        return jsonify({"error": error}), 500 # Errores genéricos del servidor
+        return jsonify({"error": error}), 500 
     
     return jsonify({
         "message": "Subscription created successfully",
@@ -121,7 +120,7 @@ def get_subscription_status(subscription_id_str, current_user_id):
     Retorna si la suscripción está activa o expirada.
     """
     
-    subscription = subscription_service.get_subscription_by_id(subscription_id_str) # Necesitarías añadir este método en subscription_service
+    subscription = subscription_service.get_subscription_by_id(subscription_id_str)
     if subscription and str(subscription["customer_id"]) != current_user_id:
        return jsonify({"error": "You are not authorized to view this subscription's status"}), 403
 
@@ -150,7 +149,7 @@ def get_subscription_settings(subscription_id_str, current_user_id):
         elif "not found" in error:
             return jsonify({"error": error}), 404
         elif "Product associated with this subscription is not customizable" in error:
-            return jsonify({"error": error}), 400 # Es un bad request porque se pide settings de algo no customizable
+            return jsonify({"error": error}), 400 
         return jsonify({"error": error}), 500 
     return jsonify({
         "subscription_id": subscription_id_str,
@@ -184,7 +183,7 @@ def edit_subscription_settings(subscription_id_str, current_user_id):
         elif "Product associated with this subscription is not customizable" in error:
             return jsonify({"error": error}), 400
         elif "Settings already up to date" in error:
-            return jsonify({"message": error}), 200 # No es un error, solo informativo
+            return jsonify({"message": error}), 200 
         return jsonify({"error": error}), 500
     
     if success:
@@ -216,7 +215,7 @@ def extend_subscription(subscription_id_str, current_user_id):
         elif "not found" in error:
             return jsonify({"error": error}), 404
         elif "Subscription expiration date already set to this value" in error:
-            return jsonify({"message": error}), 200 # No es un error
+            return jsonify({"message": error}), 200 
         return jsonify({"error": error}), 500
     
     if success:

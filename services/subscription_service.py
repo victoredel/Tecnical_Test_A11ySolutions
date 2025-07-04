@@ -43,11 +43,10 @@ class SubscriptionService:
         if not product.get("customizable", False) and customization:
             return None, "Product is not customizable, customization data not allowed."
         
-        # Verificar si ya existe una suscripción activa para este cliente y producto
         existing_subscription = self.subscriptions_collection.find_one({
             "customer_id": customer_id,
             "product_id": product_id,
-            "expiration_date": {"$gt": datetime.now()} # activa
+            "expiration_date": {"$gt": datetime.now()} 
         })
         if existing_subscription:
             return None, "Customer already has an active subscription for this product."
@@ -100,7 +99,7 @@ class SubscriptionService:
         )
         if result.modified_count == 1:
             return True, None
-        elif result.matched_count == 1: # Document found, but no changes made
+        elif result.matched_count == 1: 
             return True, "Settings already up to date, no changes made"
         return False, "Failed to update subscription settings."
 
@@ -129,3 +128,13 @@ class SubscriptionService:
         elif result.matched_count == 1:
             return True, "Subscription expiration date already set to this value"
         return False, "Failed to extend subscription."
+    def get_subscription_by_id(self, subscription_id_str):
+        """
+        Retorna un documento de suscripción por su ID.
+        """
+        try:
+            subscription_id = ObjectId(subscription_id_str)
+        except Exception:
+            return None 
+        
+        return self.subscriptions_collection.find_one({"_id": subscription_id})
