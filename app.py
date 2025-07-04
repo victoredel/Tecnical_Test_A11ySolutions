@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
 from services.subscription_service import SubscriptionService 
-from database import close_db_connection 
+from database import init_db
 
 app = Flask(__name__)
+init_db()
 subscription_service = SubscriptionService()
 
 @app.route('/register_customer', methods=['POST'])
