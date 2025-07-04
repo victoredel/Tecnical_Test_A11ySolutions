@@ -1,0 +1,26 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: subscription_manager 
+    
+  backend:
+    build: .
+    container_name: python_backend
+    ports:
+      - "5005:5000"
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/ 
+      MONGO_DB_NAME: subscription_manager
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/app 
+
+volumes:
+  mongo_data:
