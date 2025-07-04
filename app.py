@@ -169,10 +169,5 @@ def extend_subscription(subscription_id_str):
         return jsonify({"message": "Subscription extended successfully"}), 200
     return jsonify({"error": "Failed to extend subscription"}), 500
 
-
-@app.teardown_appcontext
-def teardown_db(exception):
-    close_db_connection()
-
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
