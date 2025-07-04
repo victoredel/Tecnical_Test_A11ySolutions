@@ -72,20 +72,6 @@ class MetricsService:
         arpu = mrr / num_active_customers
         return round(arpu, 2)
 
-    def calculate_clv(self):
-        arpu = self.calculate_arpu()
-        one_month_ago = datetime.utcnow() - timedelta(days=30)
-        churn_rate = self.calculate_churn_rate(start_date=one_month_ago, end_date=datetime.utcnow())
-        
-        if churn_rate is not None and churn_rate > 0:
-            clv = arpu / churn_rate
-        else:
-            avg_customer_lifespan_months = 24
-            clv = arpu * avg_customer_lifespan_months
-            
-        return round(clv, 2)
-
-
     def calculate_customer_retention_rate(self, start_date, end_date):
         """
         Calcula la Tasa de Retención de Clientes (CRR) para un período dado.

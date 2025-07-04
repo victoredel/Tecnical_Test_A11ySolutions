@@ -229,7 +229,7 @@ def extend_subscription(subscription_id_str, current_user_id):
 
 @app.route('/metrics/mrr', methods=['GET'])
 @jwt_required
-def get_mrr():
+def get_mrr(current_user_id):
     """
     Retorna el Ingreso Recurrente Mensual (MRR) actual.
     """
@@ -238,7 +238,7 @@ def get_mrr():
 
 @app.route('/metrics/arr', methods=['GET'])
 @jwt_required
-def get_arr():
+def get_arr(current_user_id):
     """
     Retorna el Ingreso Recurrente Anual (ARR) actual.
     """
@@ -247,25 +247,16 @@ def get_arr():
 
 @app.route('/metrics/arpu', methods=['GET'])
 @jwt_required
-def get_arpu():
+def get_arpu(current_user_id):
     """
     Retorna el Ingreso Medio por Usuario (ARPU) actual.
     """
     arpu = metrics_service.calculate_arpu()
     return jsonify({"arpu": arpu}), 200
 
-@app.route('/metrics/clv', methods=['GET'])
-@jwt_required
-def get_clv():
-    """
-    Retorna el Valor de Vida del Cliente (CLV).
-    """
-    clv = metrics_service.calculate_clv()
-    return jsonify({"clv": clv}), 200
-
 @app.route('/metrics/retention', methods=['GET'])
 @jwt_required
-def get_retention_rate():
+def get_retention_rate(current_user_id):
     """
     Retorna la Tasa de Retención de Clientes (CRR) para un período dado.
     Parámetros de consulta: start_date, end_date (formato YYYY-MM-DD)
@@ -290,7 +281,7 @@ def get_retention_rate():
 
 @app.route('/metrics/churn', methods=['GET'])
 @jwt_required
-def get_churn_rate():
+def get_churn_rate(current_user_id):
     """
     Retorna la Tasa de Abandono (Churn Rate - CR) para un período dado.
     Parámetros de consulta: start_date, end_date (formato YYYY-MM-DD)
@@ -315,7 +306,7 @@ def get_churn_rate():
 
 @app.route('/metrics/aov', methods=['GET'])
 @jwt_required
-def get_aov():
+def get_aov(current_user_id):
     """
     Retorna el Valor Promedio del Pedido (AOV).
     """
@@ -324,7 +315,7 @@ def get_aov():
 
 @app.route('/metrics/rpr', methods=['GET'])
 @jwt_required
-def get_rpr():
+def get_rpr(current_user_id):
     """
     Retorna la Tasa de Compra Repetida (RPR).
     """

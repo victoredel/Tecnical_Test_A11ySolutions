@@ -25,38 +25,63 @@ class SubscriptionService:
         result = self.products_collection.insert_one(product_data)
         return str(result.inserted_id), None
 
-    def subscribe_customer_to_product(self, customer_id_str, product_id_str, expiration_date_str, customization):
-        if not ObjectId.is_valid(customer_id_str) or not ObjectId.is_valid(product_id_str):
-            return None, "Invalid customer_id or product_id format."
+    def subscribe_customer_to_product(self, customer_id_str, product_id_str, expiration_date_str, customization=None):
+        """
+        Suscribe a un cliente a un producto, guardando el precio y la periodicidad del producto
+        en la suscripción para el cálculo de métricas históricas.
+        """
+        try:
+            customer_id = ObjectId(customer_id_str)
+            product_id = ObjectId(product_id_str)
+        except Exception:
+            return None, "Invalid customer_id or product_id format"
 
-        customer_id = ObjectId(customer_id_str)
-        product_id = ObjectId(product_id_str)
+        customer = self.customers_collection.find_one({"_id": customer_id})
+        if not customer:
+            return None, "Customer not found"
 
-        customer_exists = self.customers_collection.find_one({"_id": customer_id})
         product = self.products_collection.find_one({"_id": product_id})
-
-        if not customer_exists:
-            return None, "Customer not found."
         if not product:
-            return None, "Product not found."
+            return None, "Product not found"
+
+        active_subscription = self.subscriptions_collection.find_one({
+            "customer_id": customer_id,
+            "product_id": product_id,
+            "expiration_date": {"$gt": datetime.utcnow()} # Activa si la fecha de expiración es futura
+        })
+        if active_subscription:
+            return None, "Customer already has an active subscription for this product"
 
         try:
             expiration_date = datetime.fromisoformat(expiration_date_str)
+            if expiration_date.tzinfo is None:
+                expiration_date = expiration_date.replace(tzinfo=None)
+            if expiration_date < datetime.utcnow():
+                 return None, "Expiration date cannot be in the past"
         except ValueError:
-            return None, "Invalid expiration date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)."
-        
-        if not product.get("customizable", False) and customization:
-            return None, "Product is not customizable, customization data not allowed."
-        
-        existing_subscription = self.subscriptions_collection.find_one({
-            "customer_id": customer_id,
-            "product_id": product_id,
-            "expiration_date": {"$gt": datetime.now()} 
-        })
-        if existing_subscription:
-            return None, "Customer already has an active subscription for this product."
+            return None, "Invalid expiration_date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)."
 
-        subscription_data = subscription_model(customer_id, product_id, expiration_date, customization)
+        if product.get("customizable") and customization is None:
+            return None, "Product is customizable, but no customization data provided"
+        if not product.get("customizable") and customization is not None:
+            return None, "Product is not customizable, but customization data was provided"
+        
+        subscription_price = product.get("price")
+        subscription_periodicity = product.get("periodicity")
+
+        if subscription_price is None or subscription_periodicity is None:
+            return None, "Product is missing price or periodicity data." 
+
+
+        subscription_data = subscription_model(
+            customer_id=customer_id,
+            product_id=product_id,
+            expiration_date=expiration_date,
+            customization=customization,
+            price_at_subscription=subscription_price, 
+            periodicity_at_subscription=subscription_periodicity, 
+            start_date=datetime.utcnow()
+        )
         result = self.subscriptions_collection.insert_one(subscription_data)
         return str(result.inserted_id), None
 
