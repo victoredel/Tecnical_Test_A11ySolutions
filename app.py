@@ -4,6 +4,7 @@ from services.subscription_service import SubscriptionService
 from database import init_db
 from utils.auth import jwt_required 
 from services.metrics_service import MetricsService
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 init_db()
@@ -57,7 +58,7 @@ def register_customer():
 
 @app.route('/add_product', methods=['POST'])
 @jwt_required
-def add_product():
+def add_product(current_user_id):
     """
     Añade un nuevo producto.
     Body: {"name": "Nombre Producto", "description": "Descripción", "customizable": true/false, "price": 100.0, "periodicity": "monthly"}
@@ -254,7 +255,7 @@ def get_arpu(current_user_id):
     arpu = metrics_service.calculate_arpu()
     return jsonify({"arpu": arpu}), 200
 
-@app.route('/metrics/retention', methods=['GET'])
+@app.route('/metrics/crr', methods=['GET'])
 @jwt_required
 def get_retention_rate(current_user_id):
     """
@@ -269,7 +270,7 @@ def get_retention_rate(current_user_id):
 
     try:
         start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-        end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1, seconds=-1) # Fin del día
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1, seconds=-1) 
     except ValueError:
         return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
 
