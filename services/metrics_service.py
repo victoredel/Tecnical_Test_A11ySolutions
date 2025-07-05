@@ -1,4 +1,3 @@
-# services/metrics_service.py
 from database import get_db
 from datetime import datetime, timedelta, timezone
 from bson import ObjectId
@@ -12,8 +11,6 @@ class MetricsService:
     def get_active_subscriptions_in_period(self, start_date, end_date):
         """
         Obtiene suscripciones activas en un periodo dado.
-        Una suscripción se considera activa si su start_date es <= end_date
-        y su expiration_date es >= start_date.
         """
         return list(self.subscriptions_collection.find({
             "start_date": {"$lte": end_date},
@@ -23,8 +20,6 @@ class MetricsService:
     def calculate_mrr(self):
         """
         Calcula el Ingreso Recurrente Mensual (MRR) actual.
-        Suma los ingresos mensuales de todas las suscripciones activas.
-        Las suscripciones anuales se dividen entre 12.
         """
         mrr = 0.0
         active_subscriptions = self.subscriptions_collection.find({
@@ -56,7 +51,6 @@ class MetricsService:
     def calculate_arpu(self):
         """
         Calcula el Ingreso Medio por Usuario (ARPU) actual.
-        MRR / número de clientes con suscripciones activas.
         """
         mrr = self.calculate_mrr()
         
@@ -75,7 +69,6 @@ class MetricsService:
     def calculate_customer_retention_rate(self, start_date, end_date):
         """
         Calcula la Tasa de Retención de Clientes (CRR) para un período dado.
-        Fórmula: ((clientes_al_final - nuevos_clientes) / clientes_al_inicio) * 100
         """
         customers_at_start_period = self.subscriptions_collection.distinct(
             "customer_id",
@@ -115,9 +108,6 @@ class MetricsService:
     def calculate_churn_rate(self, start_date, end_date):
         """
         Calcula la Tasa de Abandono (Churn Rate - CR) para un período dado.
-        Fórmula: (clientes perdidos / clientes al inicio) * 100
-        Clientes perdidos: Clientes que estaban activos al inicio del período pero no al final,
-        y no tienen nuevas suscripciones que los mantengan "activos".
         """
         customers_at_start_period = self.subscriptions_collection.distinct(
             "customer_id",
@@ -146,7 +136,6 @@ class MetricsService:
     def calculate_aov(self):
         """
         Calcula el Valor Promedio del Pedido (AOV).
-        Suma de todos los ingresos de suscripciones (pasadas y presentes) / número total de suscripciones.
         """
         pipeline = [
             {"$match": {"price_at_subscription": {"$exists": True, "$ne": None}}},
@@ -167,7 +156,6 @@ class MetricsService:
     def calculate_rpr(self):
         """
         Calcula la Tasa de Compra Repetida (RPR).
-        Número de clientes que han hecho más de una suscripción / número total de clientes.
         """
         pipeline = [
             {"$group": {
@@ -190,3 +178,25 @@ class MetricsService:
         
         rpr = (num_repeat_customers / num_total_customers) * 100
         return round(rpr, 2)
+    
+    def calculate_purchase_frequency(self):
+        """
+        Calcula la frecuencia de compra promedio (suscripciones por cliente).
+        """
+        total_subscriptions_pipeline = [
+            {"$group": {
+                "_id": None,
+                "count": {"$sum": 1}
+            }}
+        ]
+        total_subscriptions_result = list(self.subscriptions_collection.aggregate(total_subscriptions_pipeline))
+        num_total_subscriptions = total_subscriptions_result[0]["count"] if total_subscriptions_result else 0
+
+        total_customers_with_subscriptions = self.subscriptions_collection.distinct("customer_id")
+        num_total_customers = len(total_customers_with_subscriptions)
+
+        if num_total_customers == 0:
+            return 0.0
+        
+        purchase_frequency = num_total_subscriptions / num_total_customers
+        return round(purchase_frequency, 2)
