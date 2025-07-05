@@ -13,7 +13,7 @@ services:
     build: .
     container_name: python_backend
     ports:
-      - "5005:5000"
+      - "5000:5000"
     environment:
       MONGO_URI: mongodb://mongodb:27017/ 
       MONGO_DB_NAME: subscription_manager

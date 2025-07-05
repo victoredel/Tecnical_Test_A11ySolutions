@@ -1,257 +1,171 @@
-# Gestión de Suscripciones de Clientes (Modular y Organizada con Seguridad JWT)
+# Sistema de Gestión de Suscripciones y Métricas
 
-Este proyecto es un sistema de backend para gestionar suscripciones de clientes a productos, implementado con Python (Flask) y MongoDB. La estructura está modularizada en directorios para una mejor organización y mantenibilidad, e incorpora un sistema de seguridad basado en JSON Web Tokens (JWT).
+Este proyecto es una API RESTful desarrollada con Flask que permite gestionar clientes, productos, suscripciones y calcular métricas clave de negocio. Utiliza MongoDB como base de datos.
 
-## Estructura del Proyecto
+## 🚀 Características
 
-* `app.py`: Punto de entrada de la aplicación Flask y definición de las rutas de la API.
-* `config.py`: Maneja la configuración de la aplicación (e.g., URI de MongoDB, clave secreta JWT).
-* `database.py`: Gestiona la conexión y desconexión con la base de datos MongoDB.
-* `models/`: Directorio que contiene las definiciones de las estructuras de datos.
-    * `customer.py`: Define el modelo de datos para los clientes, incluyendo ahora la contraseña hasheada.
-    * `product.py`: Define el modelo de datos para los productos.
-    * `subscription.py`: Define el modelo de datos para las suscripciones.
-    * `__init__.py`: (vacío) Indica que `models` es un paquete Python.
-* `services/`: Directorio que contiene la lógica de negocio.
-    * `auth_service.py`: **[NUEVO]** Contiene la lógica para el registro y login de clientes, y la generación de JWTs.
-    * `subscription_service.py`: Contiene la lógica de negocio principal para las operaciones relacionadas con productos y suscripciones.
-    * `__init__.py`: (vacío) Indica que `services` es un paquete Python.
-* `utils/`: Directorio para utilidades y funciones auxiliares.
-    * `auth.py`: **[MODIFICADO]** Implementa el decorador para la verificación de JWT.
-    * `security.py`: **[NUEVO]** Contiene funciones para el hashing y verificación de contraseñas.
-    * `__init__.py`: (vacío) Indica que `utils` es un paquete Python.
-* `requirements.txt`: Lista las dependencias del proyecto.
-* `.env`: Almacena variables de entorno (e.g., credenciales de la DB, clave secreta JWT).
-* `Dockerfile`: Define cómo construir la imagen de Docker para la aplicación.
-* `docker-compose.yml`: Orquesta los contenedores Docker (aplicación y base de datos).
-* `README.md`: Este documento con instrucciones y detalles del proyecto.
+* **Autenticación de Clientes**: Registro y login de clientes con JWT para acceso seguro a la API.
 
-## Requisitos
+* **Gestión de Productos**: Añadir y listar productos con detalles como precio, periodicidad y si son personalizables.
 
-* Docker y Docker Compose (recomendado para un setup sencillo)
-* Python 3.9+ (si no usas Docker)
-* MongoDB (si no usas Docker)
+* **Gestión de Suscripciones**:
 
-## Configuración del Entorno (con Docker Compose - Recomendado)
+    * Suscribir clientes a productos.
 
-1.  **Clona el repositorio:**
-    ```bash
-    git clone <URL_TU_REPOSITORIO>
-    cd <nombre_del_repositorio>
+    * Verificar el estado de una suscripción (activa/expirada).
+
+    * Obtener y editar la configuración de suscripciones personalizables.
+
+    * Extender la fecha de expiración de las suscripciones.
+
+* **Métricas de Negocio**:
+
+    * **MRR** (Monthly Recurring Revenue): Ingreso recurrente mensual.
+
+    * **ARR** (Annual Recurring Revenue): Ingreso recurrente anual.
+
+    * **ARPU** (Average Revenue Per User): Ingreso promedio por usuario.
+
+    * **CRR** (Customer Retention Rate): Tasa de retención de clientes.
+
+    * **Churn Rate**: Tasa de abandono de clientes.
+
+    * **AOV** (Average Order Value): Valor promedio del pedido.
+
+    * **RPR** (Repeat Purchase Rate): Tasa de compra repetida.
+
+    * **Purchase Frequency**: Frecuencia de compra.
+
+* **CI/CD con GitHub Actions**: Integración continua para automatizar pruebas en cada push/pull request.
+
+## 🛠️ Configuración e Instalación
+
+### Requisitos Previos
+
+* Docker y Docker Compose (recomendado para un setup rápido)
+
+* Alternativamente: Python 3.8+ y MongoDB (si no usas Docker)
+
+### Pasos de Instalación
+
+1.  **Clonar el repositorio**:
+
+    ```
+    git clone https://github.com/victoredel/Tecnical_Test_A11ySolutions.git
+    cd Tecnical_Test_A11ySolutions
     ```
 
-2.  **Crea el archivo de variables de entorno `.env`:**
-    Crea un archivo `.env` en la raíz del proyecto con el siguiente contenido:
+2.  **Configurar variables de entorno**:
+    Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
+
     ```
-    MONGO_URI=mongodb://mongodb:27017/
-    MONGO_DB_NAME=subscription_manager
-    JWT_SECRET_KEY=super_secreta_jwt_key_que_debes_cambiar_EN_SERIO # ¡Usa una clave fuerte y cámbiala!
-    JWT_ACCESS_TOKEN_EXPIRES_SECONDS=3600 # Token expira en 1 hora
+    MONGO_URI=mongodb://mongodb:27017/ # Usar el nombre del servicio de MongoDB de Docker Compose
+    MONGO_DB_NAME=subscription_manager # Nombre de la base de datos configurado en docker-compose.yml
+    JWT_SECRET_KEY=una_clave_secreta_fuerte_para_jwt
+    JWT_ACCESS_TOKEN_EXPIRES_SECONDS=3600 # 1 hora
     ```
 
-3.  **Inicia los servicios con Docker Compose:**
-    ```bash
+    **Importante**: Para Docker Compose, `MONGO_URI` debe apuntar al nombre del servicio de MongoDB (`mongodb`) definido en `docker-compose.yml`.
+
+## 🚀 Ejecución de la Aplicación
+
+### Usando Docker Compose (Recomendado)
+
+Esta es la forma más sencilla de levantar la aplicación y la base de datos MongoDB:
+
+1.  **Construir y levantar los servicios**:
+
+    ```
     docker-compose up --build
     ```
-    Esto construirá la imagen de Docker para el backend, instalará las nuevas dependencias (`PyJWT`, `bcrypt`), iniciará el contenedor de MongoDB y el contenedor del backend. La aplicación estará disponible en `http://localhost:5000`.
 
-## Configuración del Entorno (local sin Docker)
+    Esto construirá la imagen de Docker para tu backend (si es la primera vez o si hay cambios en el `Dockerfile`) y levantará tanto el servicio de la aplicación Flask como el de MongoDB.
 
-1.  **Instala Python:** Asegúrate de tener Python 3.9 o superior instalado.
+La API estará disponible en `http://localhost:5000`.
 
-2.  **Instala MongoDB:** Instala MongoDB en tu sistema y asegúrate de que esté corriendo (normalmente en `mongodb://localhost:27017/`).
+### Ejecución Local (Alternativa, sin Docker)
 
-3.  **Crea un entorno virtual (recomendado):**
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate  # En Windows: venv\Scripts\activate
+Si prefieres ejecutar la aplicación directamente en tu máquina (asegurándote de tener MongoDB corriendo localmente):
+
+1.  **Crear un entorno virtual** (recomendado):
+
+    ```
+    python -m venv venv
+    source venv/bin/activate # En Linux/macOS
+    # venv\Scripts\activate # En Windows
     ```
 
-4.  **Instala las dependencias:**
-    ```bash
+2.  **Instalar dependencias**:
+
+    ```
     pip install -r requirements.txt
     ```
 
-5.  **Crea el archivo de variables de entorno `.env`:**
-    Crea un archivo `.env` en la raíz del proyecto con el siguiente contenido:
-    ```
-    MONGO_URI=mongodb://localhost:27017/ # Ajusta si tu Mongo no está en localhost
-    MONGO_DB_NAME=subscription_manager
-    JWT_SECRET_KEY=super_secreta_jwt_key_que_debes_cambiar_EN_SERIO # ¡Usa una clave fuerte y cámbiala!
-    JWT_ACCESS_TOKEN_EXPIRES_SECONDS=3600
-    ```
+    (Si no tienes un `requirements.txt` aún, puedes generarlo con `pip freeze > requirements.txt` después de instalar las dependencias manualmente, o instalarlas directamente:
+    `pip install Flask PyJWT pymongo python-dotenv bcrypt pytest pytest-mock`)
 
-6.  **Inicia la aplicación:**
-    ```bash
+3.  **Asegúrate de que MongoDB esté corriendo localmente** y que tu `MONGO_URI` en `.env` apunte a `mongodb://localhost:27017/`.
+
+4.  **Iniciar la aplicación Flask**:
+
+    ```
     python app.py
     ```
-    La aplicación se ejecutará en `http://localhost:5000`.
 
-## Endpoints de la API
+    La API estará disponible en `http://0.0.0.0:5000`.
 
-Todos los endpoints base son `http://localhost:5000`.
+## 🧪 Ejecución de Tests
 
-### Seguridad de la API (JSON Web Tokens - JWT)
+Para ejecutar las pruebas unitarias con `pytest`:
+    
+    pytest tests/
+    
+## ⚙️ CI/CD con GitHub Actions
 
-La mayoría de los endpoints que modifican o consultan datos sensibles ahora requieren autenticación mediante JWT.
+Este proyecto incluye un flujo de trabajo de GitHub Actions configurado en `.github/workflows/python-app.yml`. Este workflow se ejecuta automáticamente en cada `push` y `pull request` a la rama `main`, instalando las dependencias y ejecutando los tests.
 
-**Flujo de Autenticación:**
+Puedes ver el estado de las ejecuciones de CI en la pestaña "Actions" de tu repositorio de GitHub.
 
-1.  **Registrar un cliente**: Usa el endpoint `/register_customer` con `email` y `password`.
-2.  **Iniciar sesión**: Usa el endpoint `/login` con el `email` y `password` del cliente registrado. Recibirás un `access_token` JWT.
-3.  **Hacer solicitudes protegidas**: Incluye el `access_token` en el encabezado `Authorization` de tus solicitudes, con el formato `Bearer <your_jwt_token>`.
+## 🌐 Endpoints de la API
 
-**Endpoints Nuevos/Modificados:**
+Aquí hay un resumen de los principales endpoints disponibles:
 
-* **`POST /register_customer`** (Modificado)
-    Registra un nuevo cliente con nombre, email y contraseña.
-    * **Body:** `{"name": "Nombre Cliente", "email": "cliente@example.com", "password": "secure_password"}`
-    * **Respuesta Exitosa (201 Created):** `{"message": "Customer registered successfully", "customer_id": "..."}`
-    * **Respuesta de Error (400 Bad Request):** `{"error": "Name, email, and password are required"}`
-    * **Respuesta de Error (409 Conflict):** `{"error": "Customer with this email already exists"}`
+### Autenticación
 
-* **`POST /login`** (Nuevo)
-    Inicia sesión de un cliente y retorna un JWT.
-    * **Body:** `{"email": "cliente@example.com", "password": "secure_password"}`
-    * **Respuesta Exitosa (200 OK):** `{"message": "Login successful", "access_token": "..."}`
-    * **Respuesta de Error (400 Bad Request):** `{"error": "Email and password are required"}`
-    * **Respuesta de Error (401 Unauthorized):** `{"error": "Invalid credentials"}`
+* `POST /login`: Inicia sesión de un cliente.
 
-**Endpoints Protegidos con JWT (requieren `Authorization: Bearer <token>`):**
+* `POST /register_customer`: Registra un nuevo cliente.
 
-* `POST /add_product`
-    Añade un nuevo producto.
-    * **Body:** `{"name": "Nombre Producto", "description": "Descripción", "customizable": true/false}`
-    * **Respuesta Exitosa (201 Created):** `{"message": "Product added successfully", "product_id": "..."}`
-    * **Respuesta de Error (400 Bad Request):** `{"error": "Name and description are required"}`
-    * **Respuesta de Error (409 Conflict):** `{"error": "Product with this name already exists"}`
+### Productos
 
-* `POST /subscribe`
-    Permite a un cliente suscribirse a un producto.
-    * **Body:** `{"customer_id": "...", "product_id": "...", "expiration_date": "YYYY-MM-DDTHH:MM:SS", "customization": {"key": "value"}}` (el campo `customization` es opcional y solo para productos personalizables)
-    * **Respuesta Exitosa (201 Created):** `{"message": "Subscription created successfully", "subscription_id": "..."}`
-    * **Respuestas de Error (400, 404, 409, 500):** Detalles en la sección de "Respuestas de Error relacionadas con JWT" y en el código de la API.
+* `POST /add_product`: Añade un nuevo producto (requiere JWT).
 
-* **`GET /subscription_status/<subscription_id>`**
-    Obtiene el estado (activo/expirado) de una suscripción.
-    * **Respuesta Exitosa (200 OK):** `{"subscription_id": "...", "status": "active/expired"}`
-    * **Respuestas de Error (400, 404):** Detalles en la sección de "Respuestas de Error relacionadas con JWT" y en el código de la API.
+### Suscripciones
 
-* **`GET /subscription_settings/<subscription_id>`**
-    Obtiene la configuración específica de una suscripción (personalización).
-    * **Respuesta Exitosa (200 OK):** `{"subscription_id": "...", "settings": {"key": "value"}}`
-    * **Respuestas de Error (400, 404, 500):** Detalles en la sección de "Respuestas de Error relacionadas con JWT" y en el código de la API.
+* `POST /subscribe`: Suscribe a un cliente a un producto (requiere JWT).
 
-* **`PUT /edit_subscription_settings/<subscription_id>`**
-    Modifica la configuración de una suscripción.
-    * **Body:** `{"settings": {"new_key": "new_value"}}`
-    * **Respuesta Exitosa (200 OK):** `{"message": "Subscription settings updated successfully"}` (o `{"message": "Settings already up to date, no changes made"}`)
-    * **Respuestas de Error (400, 404, 500):** Detalles en la sección de "Respuestas de Error relacionadas con JWT" y en el código de la API.
+* `GET /subscription_status/<subscription_id>`: Obtiene el estado de una suscripción (requiere JWT).
 
-* **`PUT /extend_subscription/<subscription_id>`**
-    Establece una nueva fecha de caducidad para una suscripción.
-    * **Body:** `{"new_expiration_date": "YYYY-MM-DDTHH:MM:SS"}`
-    * **Respuesta Exitosa (200 OK):** `{"message": "Subscription extended successfully"}` (o `{"message": "Subscription expiration date already set to this value"}`)
-    * **Respuestas de Error (400, 404, 500):** Detalles en la sección de "Respuestas de Error relacionadas con JWT" y en el código de la API.
+* `GET /subscription_settings/<subscription_id>`: Obtiene la configuración de una suscripción personalizable (requiere JWT).
 
-### Respuestas de Error relacionadas con JWT:
+* `PUT /edit_subscription_settings/<subscription_id>`: Modifica la configuración de una suscripción (requiere JWT).
 
-* **401 Unauthorized**:
-    * `{"error": "Authorization header is missing"}`
-    * `{"error": "Invalid Authorization header format"}`
-    * `{"error": "Unsupported authorization type"}`
-    * `{"error": "Token has expired"}`
-    * `{"error": "User specified in token not found"}`
-* **401 Unauthorized**: `{"error": "Invalid token"}`
+* `PUT /extend_subscription/<subscription_id>`: Extiende la fecha de expiración de una suscripción (requiere JWT).
 
-## Cómo Probar (Ejemplos con `curl`)
+### Métricas
 
-Asumiendo que la API está corriendo en `http://localhost:5000`.
+* `GET /metrics/mrr`: Obtiene el MRR actual (requiere JWT).
 
-1.  **Registrar un cliente (si no tienes uno):**
-    ```bash
-    curl -X POST -H "Content-Type: application/json" -d '{"name": "Juan Perez", "email": "juan.perez@example.com", "password": "mipasswordseguro"}' http://localhost:5000/register_customer
-    ```
+* `GET /metrics/arr`: Obtiene el ARR actual (requiere JWT).
 
-2.  **Iniciar sesión para obtener el token:**
-    ```bash
-    curl -X POST -H "Content-Type: application/json" -d '{"email": "juan.perez@example.com", "password": "mipasswordseguro"}' http://localhost:5000/login
-    # La respuesta contendrá un campo "access_token". Copia ese valor para las siguientes solicitudes.
-    ```
-    Suponiendo que el token es `YOUR_JWT_TOKEN_HERE`.
+* `GET /metrics/arpu`: Obtiene el ARPU actual (requiere JWT).
 
-3.  **Añadir un Producto (requiere token):**
-    ```bash
-    curl -X POST -H "Content-Type: application/json" \
-         -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
-         -d '{"name": "Widget Accesibilidad", "description": "Widget para mejorar la accesibilidad de tu web", "customizable": true}' \
-         http://localhost:5000/add_product
-    ```
+* `GET /metrics/retention?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`: Obtiene la tasa de retención (requiere JWT).
 
-4.  **Suscribir un Cliente a un Producto (requiere token):**
-    (Necesitarás los `customer_id` y `product_id`. Reemplaza `CUST_ID`, `PROD_ID` y `YOUR_JWT_TOKEN_HERE`).
-    ```bash
-    curl -X POST -H "Content-Type: application/json" \
-         -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
-         -d '{
-            "customer_id": "CUST_ID",
-            "product_id": "PROD_ID",
-            "expiration_date": "2026-12-31T23:59:59",
-            "customization": {
-                "topBarColor": "#FFFFFF",
-                "topBarBackgroundColor": "#1A1A1A",
-                "positionIndex": 1,
-                "defaultLang": "es"
-            }
-        }' http://localhost:5000/subscribe
-    ```
+* `GET /metrics/churn?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`: Obtiene la tasa de abandono (requiere JWT).
 
-5.  **Obtener Estado de Suscripción (requiere token):**
-    (Reemplaza `SUB_ID` y `YOUR_JWT_TOKEN_HERE`).
-    ```bash
-    curl -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" http://localhost:5000/subscription_status/SUB_ID
-    ```
+* `GET /metrics/aov`: Obtiene el AOV (requiere JWT).
 
-6.  **Obtener Configuración de Suscripción (requiere token):**
-    (Reemplaza `SUB_ID` y `YOUR_JWT_TOKEN_HERE`).
-    ```bash
-    curl -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" http://localhost:5000/subscription_settings/SUB_ID
-    ```
+* `GET /metrics/rpr`: Obtiene la RPR (requiere JWT).
 
-7.  **Editar Configuración de Suscripción (requiere token):**
-    (Reemplaza `SUB_ID` y `YOUR_JWT_TOKEN_HERE`).
-    ```bash
-    curl -X PUT -H "Content-Type: application/json" \
-         -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
-         -d '{"settings": {"topBarColor": "#FF0000", "defaultLang": "en"}}' \
-         http://localhost:5000/edit_subscription_settings/SUB_ID
-    ```
-
-8.  **Extender Suscripción (requiere token):**
-    (Reemplaza `SUB_ID` y `YOUR_JWT_TOKEN_HERE`).
-    ```bash
-    curl -X PUT -H "Content-Type: application/json" \
-         -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
-         -d '{"new_expiration_date": "2027-12-31T23:59:59"}' \
-         http://localhost:5000/extend_subscription/SUB_ID
-    ```
-
-## Consideraciones Adicionales y Puntos Extra
-
-El documento original menciona varias ideas y puntos extra que pueden "boostear la posibilidad de ser aceptado para el puesto". Aunque no son requisitos estrictos, demuestran un conocimiento más profundo.
-
-1.  [cite_start]**Contenedorización del Proyecto**: Ya implementado con Docker y Docker Compose. [cite: 51]
-2.  [cite_start]**Creación de un Frontend**: Implementar una interfaz de usuario para el proyecto (React es un plus). [cite: 52]
-3.  [cite_start]**Seguridad de la API**: Ya implementado con JWT. [cite: 53]
-4.  [cite_start]**Métricas Financieras**: Incluir precio y periodicidad en la suscripción y modificar la API para calcular estadísticas como MRR, ARR, ARPU, CLV, CRR, CR, AOV, RPR. [cite: 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
-5.  [cite_start]**Visualizaciones Frontend de las Métricas**: Si se implementan las estadísticas financieras, crear visualizaciones en el frontend. [cite: 65]
-6.  [cite_start]**Pruebas (Testing)**: Añadir pruebas unitarias o de integración (`pytest` es altamente valorado). [cite: 66]
-7.  [cite_start]**Pipelines de CI/CD**: Implementar pipelines de Integración Continua/Despliegue Continuo (e.g., con GitHub Actions). [cite: 67]
-
-**Recomendaciones Finales del Documento:**
-
-* [cite_start]No dudes en preguntar si tienes alguna duda. [cite: 69]
-* [cite_start]La entrega no tiene una fecha límite estricta, pero se necesita aumentar el equipo lo antes posible, así que no intentes implementar todos los puntos extra. [cite: 73, 74]
-* [cite_start]Haz lo que sabes hacer bien y el resto se puede discutir en la llamada de revisión. [cite: 75]
-* [cite_start]Si te quedas atascado o crees que puedes enriquecer el proyecto, siéntete libre de añadir tus propias características o adaptar un poco los requisitos. [cite: 76]
-* [cite_start]Puedes usar otras herramientas que no sean las recomendadas, siempre y cuando uses Python y MongoDB. [cite: 77]
+* `GET /metrics/purchase_frequency`: Obtiene la frecuencia de compra (requiere JWT).
