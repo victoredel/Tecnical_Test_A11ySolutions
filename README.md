@@ -51,8 +51,8 @@ Este proyecto es una API RESTful desarrollada con Flask que permite gestionar cl
 1.  **Clonar el repositorio**:
 
     ```bash
-    git clone <URL_DE_TU_REPOSITORIO>
-    cd <nombre_de_tu_repositorio>
+    git clone https://github.com/victoredel/Tecnical_Test_A11ySolutions.git
+    cd Tecnical_Test_A11ySolutions
     ```
 
 2.  **Configurar variables de entorno**:
