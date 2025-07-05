@@ -50,9 +50,9 @@ Este proyecto es una API RESTful desarrollada con Flask que permite gestionar cl
 
 1.  **Clonar el repositorio**:
 
-    ```
-    git clone https://github.com/victoredel/Tecnical_Test_A11ySolutions.git
-    cd Tecnical_Test_A11ySolutions
+    ```bash
+    git clone <URL_DE_TU_REPOSITORIO>
+    cd <nombre_de_tu_repositorio>
     ```
 
 2.  **Configurar variables de entorno**:
@@ -75,7 +75,7 @@ Esta es la forma más sencilla de levantar la aplicación y la base de datos Mon
 
 1.  **Construir y levantar los servicios**:
 
-    ```
+    ```bash
     docker-compose up --build
     ```
 
@@ -89,7 +89,7 @@ Si prefieres ejecutar la aplicación directamente en tu máquina (asegurándote 
 
 1.  **Crear un entorno virtual** (recomendado):
 
-    ```
+    ```bash
     python -m venv venv
     source venv/bin/activate # En Linux/macOS
     # venv\Scripts\activate # En Windows
@@ -97,7 +97,7 @@ Si prefieres ejecutar la aplicación directamente en tu máquina (asegurándote 
 
 2.  **Instalar dependencias**:
 
-    ```
+    ```bash
     pip install -r requirements.txt
     ```
 
@@ -108,7 +108,7 @@ Si prefieres ejecutar la aplicación directamente en tu máquina (asegurándote 
 
 4.  **Iniciar la aplicación Flask**:
 
-    ```
+    ```bash
     python app.py
     ```
 
@@ -117,9 +117,11 @@ Si prefieres ejecutar la aplicación directamente en tu máquina (asegurándote 
 ## 🧪 Ejecución de Tests
 
 Para ejecutar las pruebas unitarias con `pytest`:
-    
-    pytest tests/
-    
+
+```bash
+pytest tests/
+````
+
 ## ⚙️ CI/CD con GitHub Actions
 
 Este proyecto incluye un flujo de trabajo de GitHub Actions configurado en `.github/workflows/python-app.yml`. Este workflow se ejecuta automáticamente en cada `push` y `pull request` a la rama `main`, instalando las dependencias y ejecutando los tests.
@@ -128,44 +130,97 @@ Puedes ver el estado de las ejecuciones de CI en la pestaña "Actions" de tu rep
 
 ## 🌐 Endpoints de la API
 
-Aquí hay un resumen de los principales endpoints disponibles:
+Aquí hay un resumen de los principales endpoints disponibles, incluyendo ejemplos del cuerpo de la solicitud (body) para los métodos `POST` y `PUT`:
 
 ### Autenticación
 
-* `POST /login`: Inicia sesión de un cliente.
+  * `POST /login`
 
-* `POST /register_customer`: Registra un nuevo cliente.
+      * **Body Ejemplo**:
+        ```json
+        {
+            "email": "cliente@example.com",
+            "password": "secure_password"
+        }
+  * `POST /register_customer`
 
+      * **Body Ejemplo**:
+        ```json
+        {
+            "name": "Nombre Cliente",
+            "email": "cliente@example.com",
+            "password": "secure_password"
+        }
 ### Productos
 
-* `POST /add_product`: Añade un nuevo producto (requiere JWT).
-
+  * `POST /add_product`
+      * **Body Ejemplo**:
+        ```json
+        {
+            "name": "Plan Premium",
+            "description": "Acceso completo a todas las características",
+            "customizable": true,
+            "price": 99.99,
+            "periodicity": "monthly"
+        }
 ### Suscripciones
 
-* `POST /subscribe`: Suscribe a un cliente a un producto (requiere JWT).
+  * `POST /subscribe`
 
-* `GET /subscription_status/<subscription_id>`: Obtiene el estado de una suscripción (requiere JWT).
+      * **Body Ejemplo**:
+        ```json
+        {
+            "customer_id": "60d5ec49f7e3b1a2b3c4d5e6",
+            "product_id": "60d5ec49f7e3b1a2b3c4d5e7",
+            "expiration_date": "2025-12-31T23:59:59",
+            "customization": {
+                "color": "blue",
+                "storage_gb": 100
+            }
+        }
+    *Nota: `customization` es opcional y solo necesario si `customizable` es `true` para el producto.*
 
-* `GET /subscription_settings/<subscription_id>`: Obtiene la configuración de una suscripción personalizable (requiere JWT).
+  * `GET /subscription_status/<subscription_id>`: Obtiene el estado de una suscripción (requiere JWT).
 
-* `PUT /edit_subscription_settings/<subscription_id>`: Modifica la configuración de una suscripción (requiere JWT).
+  * `GET /subscription_settings/<subscription_id>`: Obtiene la configuración de una suscripción personalizable (requiere JWT).
 
-* `PUT /extend_subscription/<subscription_id>`: Extiende la fecha de expiración de una suscripción (requiere JWT).
+  * `PUT /edit_subscription_settings/<subscription_id>`
 
+      * **Body Ejemplo**:
+        
+        ```json
+        {
+            "settings": {
+                "new_key": "new_value",
+                "color": "green"
+            }
+        }
+  * `PUT /extend_subscription/<subscription_id>`
+
+      * **Body Ejemplo**:
+        
+        ```json
+        {
+            "new_expiration_date": "2026-12-31T23:59:59"
+        }
 ### Métricas
 
-* `GET /metrics/mrr`: Obtiene el MRR actual (requiere JWT).
+  * `GET /metrics/mrr`: Obtiene el MRR actual (requiere JWT).
 
-* `GET /metrics/arr`: Obtiene el ARR actual (requiere JWT).
+  * `GET /metrics/arr`: Obtiene el ARR actual (requiere JWT).
 
-* `GET /metrics/arpu`: Obtiene el ARPU actual (requiere JWT).
+  * `GET /metrics/arpu`: Obtiene el ARPU actual (requiere JWT).
 
-* `GET /metrics/retention?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`: Obtiene la tasa de retención (requiere JWT).
+  * `GET /metrics/clv`: Obtiene el CLV (requiere JWT).
 
-* `GET /metrics/churn?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`: Obtiene la tasa de abandono (requiere JWT).
+  * `GET /metrics/retention?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`: Obtiene la tasa de retención (requiere JWT).
 
-* `GET /metrics/aov`: Obtiene el AOV (requiere JWT).
+  * `GET /metrics/churn?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`: Obtiene la tasa de abandono (requiere JWT).
 
-* `GET /metrics/rpr`: Obtiene la RPR (requiere JWT).
+  * `GET /metrics/aov`: Obtiene el AOV (requiere JWT).
 
-* `GET /metrics/purchase_frequency`: Obtiene la frecuencia de compra (requiere JWT).
+  * `GET /metrics/rpr`: Obtiene la RPR (requiere JWT).
+
+  * `GET /metrics/purchase_frequency`: Obtiene la frecuencia de compra (requiere JWT).
+
+-----
