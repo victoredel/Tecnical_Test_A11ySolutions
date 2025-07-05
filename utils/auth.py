@@ -1,5 +1,5 @@
 import jwt
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 from functools import wraps
 from config import Config
 from services.auth_service import AuthService 
@@ -10,10 +10,10 @@ def jwt_required(f):
         auth_header = request.headers.get('Authorization')
 
         if not auth_header:
-            return jsonify({"error": "Authorization header is missing"}), 401 # No autorizado
+            return jsonify({"error": "Authorization header is missing"}), 401 
         
         try:
-            token_type, token = auth_header.split(None, 1) # Divide "Bearer <token>"
+            token_type, token = auth_header.split(None, 1) 
         except ValueError:
             return jsonify({"error": "Invalid Authorization header format"}), 401
         
