@@ -4,8 +4,8 @@ from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 
 class MetricsService:
-    def __init__(self):
-        self.db = get_db()
+    def __init__(self, db):
+        self.db = db
         self.customers_collection = self.db.customers
         self.subscriptions_collection = self.db.subscriptions
 

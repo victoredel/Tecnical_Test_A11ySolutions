@@ -6,8 +6,8 @@ from utils.security import hash_password, verify_password
 from config import Config
 
 class AuthService:
-    def __init__(self):
-        self.db = get_db()
+    def __init__(self, db):
+        self.db = db
         self.customers_collection = self.db.customers
 
     def register_customer(self, name, email, password):

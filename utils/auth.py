@@ -4,8 +4,6 @@ from functools import wraps
 from config import Config
 from services.auth_service import AuthService 
 
-auth_service = AuthService() 
-
 def jwt_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -26,6 +24,10 @@ def jwt_required(f):
             payload = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
             
             user_id = payload.get('sub')
+            
+            
+            auth_service = current_app.auth_service 
+            
             if not user_id or not auth_service.get_customer_by_id(user_id):
                 return jsonify({"error": "User specified in token not found"}), 401
 

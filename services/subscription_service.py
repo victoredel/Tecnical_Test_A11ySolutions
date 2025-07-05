@@ -6,8 +6,8 @@ from bson import ObjectId
 from datetime import datetime
 
 class SubscriptionService:
-    def __init__(self):
-        self.db = get_db()
+    def __init__(self, db):
+        self.db = db
         self.customers_collection = self.db.customers
         self.products_collection = self.db.products
         self.subscriptions_collection = self.db.subscriptions

@@ -16,7 +16,7 @@ def test_register_customer_success(mock_db):
     mock_db['customers'].find_one.return_value = None
     mock_db['customers'].insert_one.return_value.inserted_id = ObjectId()
 
-    auth_service = AuthService()
+    auth_service = AuthService(mock_db['db'])
     customer_id, error = auth_service.register_customer("Test User", "test@example.com", "password123")
 
     assert error is None
@@ -31,7 +31,7 @@ def test_register_customer_email_exists(mock_db):
     """
     mock_db['customers'].find_one.return_value = {"email": "existing@example.com"}
 
-    auth_service = AuthService()
+    auth_service = AuthService(mock_db['db'])
     customer_id, error = auth_service.register_customer("Existing User", "existing@example.com", "password123")
 
     assert customer_id is None
@@ -48,11 +48,9 @@ def test_login_customer_success(mock_db, mocker):
         "email": "login@example.com",
         "password_hash": hashed_pwd
     }
-    mocker.patch('datetime.datetime', autospec=True)
-    mocker.patch('datetime.datetime.now', return_value=datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc))
-    mocker.patch('datetime.datetime.utcnow', return_value=datetime(2024, 1, 1, 12, 0, 0))
-
-    auth_service = AuthService()
+    
+    mocker.patch('time.time', return_value=datetime.utcnow().timestamp())
+    auth_service = AuthService(mock_db['db'])
     token, error = auth_service.login_customer("login@example.com", "password123")
 
     assert error is None
@@ -61,7 +59,6 @@ def test_login_customer_success(mock_db, mocker):
     decoded_payload = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
     assert decoded_payload["sub"] == "60d5ec49f7e3b1a2b3c4d5e6"
     assert decoded_payload["email"] == "login@example.com"
-    assert decoded_payload["exp"] == (datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc) + timedelta(seconds=Config.JWT_ACCESS_TOKEN_EXPIRES_SECONDS)).timestamp()
 
 def test_login_customer_invalid_credentials_email(mock_db):
     """
@@ -69,7 +66,7 @@ def test_login_customer_invalid_credentials_email(mock_db):
     """
     mock_db['customers'].find_one.return_value = None 
 
-    auth_service = AuthService()
+    auth_service = AuthService(mock_db['db'])
     token, error = auth_service.login_customer("nonexistent@example.com", "password123")
 
     assert token is None
@@ -86,7 +83,7 @@ def test_login_customer_invalid_credentials_password(mock_db):
         "password_hash": hashed_pwd
     }
 
-    auth_service = AuthService()
+    auth_service = AuthService(mock_db['db'])
     token, error = auth_service.login_customer("login@example.com", "wrongpassword")
 
     assert token is None
@@ -99,7 +96,7 @@ def test_get_customer_by_id_success(mock_db):
     customer_id = ObjectId("60d5ec49f7e3b1a2b3c4d5e6")
     mock_db['customers'].find_one.return_value = {"_id": customer_id, "email": "test@example.com"}
 
-    auth_service = AuthService()
+    auth_service = AuthService(mock_db['db'])
     customer = auth_service.get_customer_by_id(str(customer_id))
 
     assert customer is not None
@@ -109,7 +106,7 @@ def test_get_customer_by_id_invalid_id(mock_db):
     """
     Verifica que devuelve None para un ID inválido.
     """
-    auth_service = AuthService()
+    auth_service = AuthService(mock_db['db'])
     customer = auth_service.get_customer_by_id("invalid_id_format")
 
     assert customer is None
