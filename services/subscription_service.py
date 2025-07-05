@@ -27,8 +27,7 @@ class SubscriptionService:
 
     def subscribe_customer_to_product(self, customer_id_str, product_id_str, expiration_date_str, customization=None):
         """
-        Suscribe a un cliente a un producto, guardando el precio y la periodicidad del producto
-        en la suscripción para el cálculo de métricas históricas.
+        Suscribe a un cliente a un producto
         """
         try:
             customer_id = ObjectId(customer_id_str)
@@ -44,14 +43,6 @@ class SubscriptionService:
         if not product:
             return None, "Product not found"
 
-        active_subscription = self.subscriptions_collection.find_one({
-            "customer_id": customer_id,
-            "product_id": product_id,
-            "expiration_date": {"$gt": datetime.utcnow()} # Activa si la fecha de expiración es futura
-        })
-        if active_subscription:
-            return None, "Customer already has an active subscription for this product"
-
         try:
             expiration_date = datetime.fromisoformat(expiration_date_str)
             if expiration_date.tzinfo is None:
@@ -59,7 +50,15 @@ class SubscriptionService:
             if expiration_date < datetime.utcnow():
                  return None, "Expiration date cannot be in the past"
         except ValueError:
-            return None, "Invalid expiration_date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)."
+            return None, "Invalid expiration date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)."
+
+        active_subscription = self.subscriptions_collection.find_one({
+            "customer_id": customer_id,
+            "product_id": product_id,
+            "expiration_date": {"$gt": datetime.utcnow()}
+        })
+        if active_subscription:
+            return None, "Customer already has an active subscription for this product"
 
         if product.get("customizable") and customization is None:
             return None, "Product is customizable, but no customization data provided"
@@ -142,9 +141,15 @@ class SubscriptionService:
         except ValueError:
             return False, "Invalid new expiration date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)."
 
+        if new_expiration_date < datetime.utcnow():
+            return False, "New expiration date cannot be in the past."
+        
         subscription_id = ObjectId(subscription_id_str)
         
         subscription = self.subscriptions_collection.find_one({"_id": subscription_id})
+        
+        if subscription and subscription["expiration_date"] > new_expiration_date:
+            return False, "Subscription expiration date already set to this value or later"
         if not subscription:
             return False, "Subscription not found."
 

@@ -1,4 +1,3 @@
-# tests/test_auth_service.py
 from services.auth_service import AuthService
 from utils.security import hash_password, verify_password
 from bson import ObjectId
